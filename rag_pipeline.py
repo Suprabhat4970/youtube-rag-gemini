@@ -7,7 +7,7 @@ from youtube_transcript_api import YouTubeTranscriptApi
 from youtube_transcript_api.formatters import TextFormatter
 
 from langchain_community.vectorstores import FAISS
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from google import genai
@@ -36,17 +36,45 @@ class YouTubeRAG:
             api_key=api_key
         )
 
-   from youtube_transcript_api import YouTubeTranscriptApi
-
-def load_transcript(self, video_id):
+   
+    def load_transcript(self, video_id):
     try:
-        transcript = YouTubeTranscriptApi().fetch(
-            video_id,
-            languages=["en", "hi"]
+        # Try English first
+        try:
+            transcript = YouTubeTranscriptApi().fetch(
+                video_id,
+                languages=["en"]
+            )
+        except:
+            # Fall back to Hindi
+            transcript = YouTubeTranscriptApi().fetch(
+                video_id,
+                languages=["hi"]
+            )
+
+        text = " ".join([chunk.text for chunk in transcript])
+
+        # Translate to English if transcript is Hindi
+        prompt = f"""
+The following is a YouTube transcript.
+
+If it is already in English,
+return it unchanged.
+
+If it is in another language (Hindi, etc.),
+translate it into natural English.
+
+Transcript:
+
+{text[:20000]}
+"""
+
+        response = self.client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=prompt
         )
 
-        text = " ".join([item.text for item in transcript])
-        return text
+        return response.text
 
     except Exception as e:
         raise Exception(f"Transcript Error: {e}")
