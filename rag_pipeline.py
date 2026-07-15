@@ -7,7 +7,7 @@ from youtube_transcript_api import YouTubeTranscriptApi
 from youtube_transcript_api.formatters import TextFormatter
 
 from langchain_community.vectorstores import FAISS
-from langchain_huggingface import HuggingFaceEmbeddings
+import langchain_huggingface
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from google import genai
@@ -21,7 +21,7 @@ class YouTubeRAG:
 
         self.vectorstore = None
 
-        self.embeddings = HuggingFaceEmbeddings(
+        self.embeddings = langchain_huggingface.HuggingFaceEmbeddings(
             model_name="sentence-transformers/all-MiniLM-L6-v2"
         )
 
@@ -38,24 +38,24 @@ class YouTubeRAG:
 
    
     def load_transcript(self, video_id):
-    try:
-        # Try English first
         try:
-            transcript = YouTubeTranscriptApi().fetch(
-                video_id,
-                languages=["en"]
-            )
-        except:
-            # Fall back to Hindi
-            transcript = YouTubeTranscriptApi().fetch(
-                video_id,
-                languages=["hi"]
-            )
+            # Try English first
+            try:
+                transcript = YouTubeTranscriptApi().fetch(
+                    video_id,
+                    languages=["en"]
+                )
+            except:
+                # Fall back to Hindi
+                transcript = YouTubeTranscriptApi().fetch(
+                    video_id,
+                    languages=["hi"]
+                )
 
-        text = " ".join([chunk.text for chunk in transcript])
+            text = " ".join([chunk.text for chunk in transcript])
 
-        # Translate to English if transcript is Hindi
-        prompt = f"""
+            # Translate to English if transcript is Hindi
+            prompt = f"""
 The following is a YouTube transcript.
 
 If it is already in English,
@@ -69,15 +69,15 @@ Transcript:
 {text[:20000]}
 """
 
-        response = self.client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=prompt
-        )
+            response = self.client.models.generate_content(
+                model="gemini-2.0-flash",
+                contents=prompt
+            )
 
-        return response.text
+            return response.text
 
-    except Exception as e:
-        raise Exception(f"Transcript Error: {e}")
+        except Exception as e:
+            raise Exception(f"Transcript Error: {e}")
 
     def build_index(self, text):
 
