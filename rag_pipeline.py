@@ -33,7 +33,6 @@ class YouTubeRAG:
             api_key=api_key
         )
 
-   
     def load_transcript(self, video_id):
         try:
             # Try English first
@@ -49,20 +48,17 @@ class YouTubeRAG:
                     languages=["hi"]
                 )
 
-            text = " ".join([chunk.text for chunk in transcript])
+            text = " ".join(chunk.text for chunk in transcript)
 
-            # Translate to English if transcript is Hindi
+            # Translate to English if needed
             prompt = f"""
-The following is a YouTube transcript.
-
-If it is already in English,
+If the following transcript is already in English,
 return it unchanged.
 
-If it is in another language (Hindi, etc.),
-translate it into natural English.
+If it is in Hindi or any other language,
+translate it into fluent English.
 
 Transcript:
-
 {text[:20000]}
 """
 
