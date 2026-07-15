@@ -37,52 +37,32 @@ class YouTubeRAG:
         )
 
     def load_transcript(self, video_id):
-
         try:
-
-            transcript_list = (
-                YouTubeTranscriptApi.list_transcripts(
-                    video_id
-                )
-            )
+            transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
 
             transcript = None
-
             try:
-                transcript = transcript_list.find_transcript(
-                    ["en"]
-                )
+                transcript = transcript_list.find_transcript(["en"])
             except Exception:
                 pass
 
             if transcript is None:
-
-                available = list(
-                    transcript_list
-                )
-
+                available = list(transcript_list)
                 if not available:
-                    raise Exception(
-                        "No transcript available"
-                    )
-
+                    raise Exception("No transcript available")
                 transcript = available[0]
 
             fetched = transcript.fetch()
-
             formatter = TextFormatter()
-
-            text = formatter.format_transcript(
-                fetched
-            )
-
+            text = formatter.format_transcript(fetched)
             return text
-
-        except Exception as e:
-
-            raise Exception(
-                f"Transcript Error: {e}"
-            )
+        except Exception:
+            import traceback
+            print("=" * 60)
+            print("FULL ERROR:")
+            traceback.print_exc()
+            print("=" * 60)
+            raise
 
     def build_index(self, text):
 
