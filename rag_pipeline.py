@@ -1,13 +1,11 @@
 import os
-import youtube_transcript_api
 
 from dotenv import load_dotenv
 
 from youtube_transcript_api import YouTubeTranscriptApi
-from youtube_transcript_api.formatters import TextFormatter
 
 from langchain_community.vectorstores import FAISS
-import langchain_huggingface
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from google import genai
@@ -20,8 +18,7 @@ class YouTubeRAG:
     def __init__(self):
 
         self.vectorstore = None
-
-        self.embeddings = langchain_huggingface.HuggingFaceEmbeddings(
+        self.embeddings = HuggingFaceEmbeddings(
             model_name="sentence-transformers/all-MiniLM-L6-v2"
         )
 
