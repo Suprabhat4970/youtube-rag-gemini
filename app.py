@@ -28,21 +28,23 @@ if "rag" not in st.session_state:
 if st.button("Load Video"):
 
     with st.spinner("Loading transcript..."):
+        try:
+            rag = YouTubeRAG()
 
-        rag = YouTubeRAG()
+            transcript = rag.load_transcript(
+                video_id
+            )
 
-        transcript = rag.load_transcript(
-            video_id
-        )
+            rag.build_index(transcript)
 
-        rag.build_index(transcript)
+            st.session_state.rag = rag
+            st.session_state.transcript = transcript
 
-        st.session_state.rag = rag
-        st.session_state.transcript = transcript
-
-        st.success(
-            "Video Loaded Successfully"
-        )
+            st.success(
+                "Video Loaded Successfully"
+            )
+        except Exception as e:
+            st.error(str(e))
 
 if st.session_state.rag:
 

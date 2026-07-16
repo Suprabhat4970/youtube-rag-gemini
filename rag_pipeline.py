@@ -22,16 +22,32 @@ class YouTubeRAG:
             model_name="sentence-transformers/all-MiniLM-L6-v2"
         )
 
-        api_key = os.getenv("GEMINI_API_KEY")
-
-        if not api_key:
-            raise ValueError(
-                "GEMINI_API_KEY not found in .env file"
-            )
-
+        api_key = self._load_api_key()
         self.client = genai.Client(
             api_key=api_key
         )
+
+    def _load_api_key(self):
+
+        api_key = (
+           
+             os.getenv("GOOGLE_API_KEY")
+        )
+
+        if not api_key:
+            raise ValueError(
+                "GEMINI_API_KEY or GOOGLE_API_KEY must be set in the environment. "
+                "Add a valid Gemini Developer API key to your .env file."
+            )
+
+        if api_key.startswith("AQ") or api_key.startswith("ya29"):
+            raise ValueError(
+                "The provided key appears to be an OAuth access token, not a "
+                "Gemini Developer API key. Use a valid API key from "
+                "https://ai.google.dev/gemini-api/docs/api-key."
+            )
+
+        return api_key
 
     def load_transcript(self, video_id):
         try:
@@ -70,7 +86,14 @@ Transcript:
             return response.text
 
         except Exception as e:
-            raise Exception(f"Transcript Error: {e}")
+            error_text = str(e)
+            if "UNAUTHENTICATED" in error_text or "ACCESS_TOKEN_TYPE_UNSUPPORTED" in error_text:
+                raise Exception(
+                    "Transcript Error: invalid Gemini API credentials. "
+                    "Make sure GEMINI_API_KEY or GOOGLE_API_KEY is set to a valid "
+                    "Gemini Developer API key, not an OAuth access token."
+                ) from e
+            raise Exception(f"Transcript Error: {error_text}") from e
 
     def build_index(self, text):
 
