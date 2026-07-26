@@ -9,6 +9,14 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from google import genai
+from utils.prompts import (
+    CONTENT_PROMPT,
+    NOTES_PROMPT,
+    QA_PROMPT,
+    QUIZ_PROMPT,
+    SUMMARY_PROMPT,
+    TRANSLATION_PROMPT,
+)
 
 
 load_dotenv()
@@ -30,8 +38,8 @@ class YouTubeRAG:
     def _load_api_key(self):
 
         api_key = (
-           
-             os.getenv("GOOGLE_API_KEY")
+            os.getenv("GEMINI_API_KEY")
+            or os.getenv("GOOGLE_API_KEY")
         )
 
         if not api_key:
@@ -67,16 +75,9 @@ class YouTubeRAG:
             text = " ".join(chunk.text for chunk in transcript)
 
             # Translate to English if needed
-            prompt = f"""
-If the following transcript is already in English,
-return it unchanged.
-
-If it is in Hindi or any other language,
-translate it into fluent English.
-
-Transcript:
-{text[:20000]}
-"""
+            prompt = TRANSLATION_PROMPT.format(
+                transcript=text[:20000]
+            )
 
             response = self.client.models.generate_content(
                 model="gemini-2.0-flash",
@@ -143,103 +144,53 @@ Transcript:
             ]
         )
 
-        prompt = f"""
-You are an AI assistant.
+        prompt = QA_PROMPT.format(
+            context=context,
+            question=question
+        )
 
-Answer ONLY using the provided context.
-
-If the answer is not present,
-say:
-"I could not find that information in the video."
-
-CONTEXT:
-{context}
-
-QUESTION:
-{question}
-"""
-
-        response = (
-            self.client.models.generate_content(
-                model="gemini-2.0-flash",
-                contents=prompt
-            )
+        response = self.client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=prompt
         )
 
         return response.text
 
     def summarize(self, transcript):
 
-        prompt = f"""
-Summarize this transcript.
+        prompt = SUMMARY_PROMPT.format(
+            transcript=transcript[:15000]
+        )
 
-Requirements:
-- Simple English
-- Bullet points
-- Key takeaways
-- Maximum 10 points
-
-Transcript:
-{transcript[:15000]}
-"""
-
-        response = (
-            self.client.models.generate_content(
-                model="gemini-2.0-flash",
-                contents=prompt
-            )
+        response = self.client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=prompt
         )
 
         return response.text
 
     def generate_notes(self, transcript):
 
-        prompt = f"""
-Create detailed study notes.
+        prompt = NOTES_PROMPT.format(
+            transcript=transcript[:15000]
+        )
 
-Include:
-- Main topics
-- Important concepts
-- Definitions
-- Key insights
-
-Transcript:
-{transcript[:15000]}
-"""
-
-        response = (
-            self.client.models.generate_content(
-                model="gemini-2.0-flash",
-                contents=prompt
-            )
+        response = self.client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=prompt
         )
 
         return response.text
 
     def generate_quiz(self, transcript):
 
-        prompt = f"""
-Generate 10 MCQs.
+        prompt = QUIZ_PROMPT.format(
+            transcript=transcript[:15000]
+        )
 
-Format:
-
-Q1:
-A.
-B.
-C.
-D.
-
-Correct Answer:
-
-Transcript:
-{transcript[:15000]}
-"""
-
-        response = (
-            self.client.models.generate_content(
-                model="gemini-2.0-flash",
-                contents=prompt
-            )
+        response = self.client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=prompt
         )
 
         return response.text
@@ -249,24 +200,13 @@ Transcript:
         transcript
     ):
 
-        prompt = f"""
-Generate:
+        prompt = CONTENT_PROMPT.format(
+            transcript=transcript[:15000]
+        )
 
-1. LinkedIn Post
-2. Twitter/X Thread
-3. Instagram Caption
-
-based on this transcript.
-
-Transcript:
-{transcript[:15000]}
-"""
-
-        response = (
-            self.client.models.generate_content(
-                model="gemini-2.0-flash",
-                contents=prompt
-            )
+        response = self.client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=prompt
         )
 
         return response.text
