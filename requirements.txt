@@ -1,18 +1,20 @@
-streamlit
+streamlit==1.49.1
 
-python-dotenv
-google-genai
+python-dotenv==1.1.1
+google-genai==1.31.0
 
-youtube-transcript-api
+youtube-transcript-api==1.2.4
 
-langchain
-langchain-community
-langchain-text-splitters
-langchain-huggingface
+langchain==0.3.27
+langchain-community==0.3.29
+langchain-text-splitters==0.3.9
+langchain-huggingface==0.3.1
 
-sentence-transformers
-transformers
+sentence-transformers==5.1.0
+transformers==4.56.0
+
 torch
+torchvision
 
 faiss-cpu
 
